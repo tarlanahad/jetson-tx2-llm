@@ -105,27 +105,14 @@ automates this.
 
 The latest llama.cpp uses C++17 and CUDA 11+ features in its CUDA kernel code.
 CUDA 10.2's `nvcc` rejects several of them. We target **llama.cpp b3278**
-(August 2024) and apply five small patches:
+(August 2024) and apply four small patches:
 
 #### Patch 1 — `cuda_bf16.h` missing (`stubs/cuda_bf16.h`)
 `cuda_bf16.h` (bfloat16 support) was added in CUDA 11. llama.cpp includes it
 unconditionally. We provide a minimal stub that defines the types without
 implementing anything — they are never called on CUDA 10.2 code paths.
 
-#### Patch 2 — `std::is_same_v` fold expression (`patches/common.cuh.patch`)
-```cpp
-// Before (C++17 fold expression — nvcc 10.2 rejects this)
-template <typename T, typename... Ts>
-inline constexpr bool is_any = (std::is_same_v<T, Ts> || ...);
-
-// After (C++14-compatible recursive template)
-template <typename T, typename U>
-struct is_same_any_multi { ... };
-template <typename T, typename... Ts>
-inline constexpr bool is_any = is_same_any_multi<T, Ts...>::value;
-```
-
-#### Patch 3 — `constexpr __device__` variable (`patches/common.cuh.patch`)
+#### Patch 2 — `constexpr __device__` variable (`patches/common.cuh.patch`)
 CUDA 10.2 does not allow `__device__` variables to be `constexpr`.
 ```cpp
 // Before
@@ -134,7 +121,7 @@ static constexpr __device__ int8_t kvalues_iq4nl[16] = { ... };
 static __device__ int8_t kvalues_iq4nl[16] = { ... };
 ```
 
-#### Patch 4 — `__builtin_assume` in device code (`patches/fattn-*.patch`)
+#### Patch 3 — `__builtin_assume` in device code (`patches/common.cuh.patch`, `patches/fattn-*.patch`)
 `__builtin_assume` is a GCC/Clang built-in that nvcc 10.2 does not recognise.
 ```cpp
 // Before
@@ -142,7 +129,7 @@ __builtin_assume(tid < D);
 // After (removed; it was a hint only, not functional)
 ```
 
-#### Patch 5 — ARM NEON `vld1q_*_x4` intrinsics (`patches/ggml-impl.h.patch`)
+#### Patch 4 — ARM NEON `vld1q_*_x4` intrinsics (`patches/ggml-impl.h.patch`)
 The `vld1q_u8_x4` / `vld1q_s8_x4` "load four vectors" intrinsics were added
 to GCC's `arm_neon.h` in GCC 9. The TX2 build must use GCC 8 (CUDA 10.2 rejects
 GCC ≥ 9). The types `uint8x16x4_t` / `int8x16x4_t` exist in GCC 8 but the load
@@ -333,6 +320,22 @@ Expected output should show `libcudart.so.10.2`, not `libcudart.so.11.0`.
 **`nvcc fatal: Unsupported gpu architecture 'compute_80'`**
 You are using a newer llama.cpp version or did not set `CMAKE_CUDA_ARCHITECTURES=62`.
 CUDA 10.2 only supports compute capabilities up to 7.5.
+
+**`ollama run` produces garbled output or `llama_get_logits_ith: invalid logits id` errors**
+Ollama v0.1.48 was built against llama.cpp b1760. Our replacement runner is b3278,
+which changed the internal logits API. The runner loads and the GPU is used correctly,
+but Ollama's response parser misreads the output format.
+
+**Fix:** Use `llama-cli` or `scripts/run.sh` directly instead of `ollama run`.
+Ollama is only needed for model management (`ollama pull`); all inference should go
+through the CUDA-10.2-compiled binaries:
+```bash
+# Pull with Ollama (model management)
+ollama pull qwen2.5:3b
+
+# Inference via llama-cli (GPU accelerated, no API mismatch)
+./scripts/run.sh "Your prompt here"
+```
 
 ---
 
