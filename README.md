@@ -178,10 +178,12 @@ on the TX2. This reduces the KV cache to ~112 MB.
 | GCC | NEON `vld1q_*_x4` | CUDA 10.2 | Use? |
 |-----|-------------------|-----------|------|
 | 7.x | ❌ Not available | ✅ | ❌ |
-| **8.x** | **✅ Available** | **✅** | **✅** |
-| 9.x | ✅ Available | ❌ Rejected | ❌ |
+| **8.x** | **⚠️ Types exist, load functions missing (patched)** | **✅** | **✅** |
+| 9.x | ✅ Fully available | ❌ Rejected | ❌ |
 
-GCC 8 is the only version that satisfies both constraints simultaneously.
+GCC 8 is the only version accepted by CUDA 10.2. The missing `vld1q_u8_x4` /
+`vld1q_s8_x4` load functions are provided by `patches/ggml-impl.h.patch` as
+inline fallbacks built from scalar `vld1q_u8` / `vld1q_s8` calls.
 
 ---
 
@@ -208,7 +210,7 @@ jetson-tx2-llm/
 ├── LICENSE
 ├── .gitignore
 ├── patches/
-│   ├── common.cuh.patch            # is_same_v, constexpr device, __builtin_assume
+│   ├── common.cuh.patch            # constexpr device, __builtin_assume
 │   ├── fattn-common.cuh.patch      # __builtin_assume
 │   ├── fattn-vec-f16.cuh.patch     # __builtin_assume
 │   ├── fattn-vec-f32.cuh.patch     # __builtin_assume
@@ -334,7 +336,8 @@ through the CUDA-10.2-compiled binaries:
 ollama pull qwen2.5:3b
 
 # Inference via llama-cli (GPU accelerated, no API mismatch)
-./scripts/run.sh "Your prompt here"
+./scripts/run.sh                                    # interactive mode
+./scripts/run.sh /path/to/model.gguf "Your prompt" # single prompt
 ```
 
 ---
