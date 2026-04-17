@@ -60,8 +60,11 @@ After installation (~15–20 min, mostly compile time):
 # Pull the recommended model
 ollama pull qwen2.5:3b
 
-# Run GPU-accelerated inference
-./scripts/run.sh "What is the capital of France?"
+# Run GPU-accelerated inference (interactive mode — auto-detects model)
+./scripts/run.sh
+
+# Or pass model path and prompt directly
+./scripts/run.sh ~/.ollama/models/blobs/<model-blob> "What is the capital of France?"
 
 # Benchmark CPU vs GPU
 ./scripts/benchmark.sh
@@ -215,6 +218,8 @@ ollama pull qwen2.5:3b
 ```
 jetson-tx2-llm/
 ├── install.sh                      # One-shot installer
+├── LICENSE
+├── .gitignore
 ├── patches/
 │   ├── common.cuh.patch            # is_same_v, constexpr device, __builtin_assume
 │   ├── fattn-common.cuh.patch      # __builtin_assume
@@ -227,7 +232,6 @@ jetson-tx2-llm/
 │   ├── ollama.service              # Systemd unit with OLLAMA_MAX_VRAM + LD_LIBRARY_PATH
 │   └── Modelfile.example           # num_ctx + num_gpu for safe TX2 inference
 └── scripts/
-    ├── install.sh                  # (same as root install.sh)
     ├── replace-runner.sh           # Swap Ollama's CUDA 11 runner post-start
     ├── benchmark.sh                # CPU vs GPU tok/s comparison
     └── run.sh                      # GPU inference wrapper (alternative to ollama run)

@@ -1,0 +1,17 @@
+# Build artifacts
+*.o
+*.a
+*.so
+build/
+
+# Patch rejects
+*.rej
+*.orig
+
+# Editor files
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
