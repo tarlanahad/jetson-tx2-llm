@@ -1,0 +1,13 @@
+diff --git a/ggml/src/ggml-cuda/fattn-common.cuh b/ggml/src/ggml-cuda/fattn-common.cuh
+index 650780f..dfd1304 100644
+--- a/ggml/src/ggml-cuda/fattn-common.cuh
++++ b/ggml/src/ggml-cuda/fattn-common.cuh
+@@ -528,7 +528,7 @@ static __global__ void flash_attn_combine_results(
+     dst       +=                 D * gridDim.y*blockIdx.x;
+ 
+     const int tid = threadIdx.x;
+-    __builtin_assume(tid < D);
++    
+ 
+     __shared__ float2 meta[parallel_blocks];
+     if (tid < 2*parallel_blocks) {

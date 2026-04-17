@@ -1,0 +1,21 @@
+[Unit]
+Description=Ollama Service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/ollama serve
+User=ollama
+Group=ollama
+Restart=always
+RestartSec=3
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"
+# Allow Ollama to use up to 6 GB of the TX2's unified memory as GPU VRAM.
+# Without this, Ollama only sees ~779 MiB (currently free GPU pages) and
+# falls back to CPU for any model larger than that.
+Environment="OLLAMA_MAX_VRAM=6000000000"
+# Ensure the CUDA 10.2 and Tegra driver libraries are found by the runner
+# subprocess (Ollama spawns it without inheriting the shell environment).
+Environment="LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/lib/aarch64-linux-gnu/tegra"
+
+[Install]
+WantedBy=default.target

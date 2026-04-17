@@ -1,0 +1,22 @@
+diff --git a/ggml/src/ggml-cuda/common.cuh b/ggml/src/ggml-cuda/common.cuh
+index 472f4ac..e16c220 100644
+--- a/ggml/src/ggml-cuda/common.cuh
++++ b/ggml/src/ggml-cuda/common.cuh
+@@ -201,7 +201,7 @@ static const char * cu_get_error_str(CUresult err) {
+ #endif
+ 
+ #if CUDART_VERSION >= 11100
+-#define GGML_CUDA_ASSUME(x) __builtin_assume(x)
++#define GGML_CUDA_ASSUME(x) ((void)(x))
+ #else
+ #define GGML_CUDA_ASSUME(x)
+ #endif // CUDART_VERSION >= 11100
+@@ -494,7 +494,7 @@ static __device__ __forceinline__ int ggml_cuda_dp4a(const int a, const int b, i
+ }
+ 
+ // TODO: move to ggml-common.h
+-static constexpr __device__ int8_t kvalues_iq4nl[16] = {-127, -104, -83, -65, -49, -35, -22, -10, 1, 13, 25, 38, 53, 69, 89, 113};
++static __device__ int8_t kvalues_iq4nl[16] = {-127, -104, -83, -65, -49, -35, -22, -10, 1, 13, 25, 38, 53, 69, 89, 113};
+ 
+ typedef void (*dequantize_kernel_t)(const void * vx, const int64_t ib, const int iqs, dfloat2 & v);
+ 

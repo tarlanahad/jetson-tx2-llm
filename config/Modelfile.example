@@ -1,0 +1,14 @@
+# Example Ollama Modelfile for GPU-optimised inference on Jetson TX2.
+#
+# Key parameters:
+#   num_ctx  – context window in tokens. The default (32 768) allocates a
+#              ~1.8 GB KV cache that, combined with the model weights, exceeds
+#              the TX2's 8 GB of unified memory and triggers the OOM killer.
+#              2048 keeps the KV cache at ~112 MB.
+#   num_gpu  – number of transformer layers to offload to the GPU.
+#              Set to 99 for a model that fits entirely on GPU (e.g. 3 B),
+#              or to 20 for qwen2.5:7b (partial offload).
+
+FROM qwen2.5:3b
+PARAMETER num_ctx 2048
+PARAMETER num_gpu 99
