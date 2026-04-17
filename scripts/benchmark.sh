@@ -42,10 +42,11 @@ run_bench() {
   local label="$1"; shift
   echo "--- $label ---"
   "$LLAMA_CLI" "${COMMON_ARGS[@]}" "$@" 2>&1 \
-    | grep -E "prompt eval time|eval time" \
+    | grep -E "prompt eval time|[^p]eval time" \
     | awk '{
-        if (/prompt eval/) printf "  Prompt eval : %s tok/s\n", $NF
-        else               printf "  Generation  : %s tok/s\n", $NF
+        # Output format: "... X.XX tokens per second)"  -> $(NF-3) is the number
+        if (/prompt eval/) printf "  Prompt eval : %s tok/s\n", $(NF-3)
+        else               printf "  Generation  : %s tok/s\n", $(NF-3)
       }'
   echo ""
 }

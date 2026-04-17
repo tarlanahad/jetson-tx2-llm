@@ -41,8 +41,8 @@ info "Step 1/7 – Installing system packages"
 # CUDA 10.2 toolkit (available in the Jetson apt sources out-of-the-box)
 apt-get install -y cuda-toolkit-10-2 zstd
 
-# GCC 8: minimum version that has vld1q_u8_x4/vld1q_s8_x4 ARM NEON intrinsics
-# AND is still accepted by CUDA 10.2's nvcc (CUDA 10.2 rejects GCC ≥ 9).
+# GCC 8: the only version accepted by CUDA 10.2's nvcc (rejects GCC ≥ 9).
+# GCC 8 lacks vld1q_u8_x4/vld1q_s8_x4 natively — the ggml-impl.h.patch adds them.
 apt-get install -y gcc-8 g++-8
 
 # Build tools
@@ -116,24 +116,26 @@ info "Build complete: $BUILD_DIR/bin/llama-server"
 # ── 4. Install Ollama ──────────────────────────────────────────────────────────
 info "Step 6/7 – Installing Ollama"
 
-if command -v ollama &>/dev/null; then
-  warn "Ollama already installed ($(ollama --version 2>&1 | head -1)) — skipping."
-else
-  # Ollama v0.1.48 is the last release whose binary only requires GLIBC 2.17.
-  # Newer releases require GLIBC 2.28, which Ubuntu 18.04 does not provide.
+# Ollama v0.1.48 is the last release whose binary only requires GLIBC 2.17.
+# Newer releases require GLIBC 2.28, which Ubuntu 18.04 does not provide.
+# Always pin to v0.1.48 regardless of what may already be installed.
+if ! command -v ollama &>/dev/null; then
+  # First install: use the official script to set up the ollama user, group,
+  # and systemd service unit. The binary it downloads may require GLIBC 2.28
+  # and fail to run — that is expected; we replace it immediately below.
   apt-get install -y zstd
   curl -fsSL https://ollama.com/install.sh -o /tmp/ollama_install.sh
-  bash /tmp/ollama_install.sh
-
-  # Replace the Ollama binary with the GLIBC-2.17-compatible v0.1.48 build.
-  TMPBIN=$(mktemp)
-  curl -fsSL \
-    "https://github.com/ollama/ollama/releases/download/v0.1.48/ollama-linux-arm64" \
-    -o "$TMPBIN"
-  mv "$TMPBIN" /usr/local/bin/ollama
-  chmod +x /usr/local/bin/ollama
-  info "Ollama version: $(ollama --version 2>&1 | head -1 || true)"
+  bash /tmp/ollama_install.sh || true
 fi
+
+info "Pinning Ollama to v0.1.48 (GLIBC 2.17 compatible)"
+TMPBIN=$(mktemp)
+curl -fsSL \
+  "https://github.com/ollama/ollama/releases/download/v0.1.48/ollama-linux-arm64" \
+  -o "$TMPBIN"
+mv "$TMPBIN" /usr/local/bin/ollama
+chmod +x /usr/local/bin/ollama
+info "Ollama version: $(ollama --version 2>&1 | head -1 || true)"
 
 # ── 5. Configure Ollama systemd service ───────────────────────────────────────
 info "Step 7/7 – Configuring Ollama systemd service"

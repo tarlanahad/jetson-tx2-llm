@@ -50,7 +50,7 @@ For `qwen2.5:7b` (4.4 GB) with partial offload (20/29 layers on GPU):
 ```bash
 git clone https://github.com/tarlanahad/jetson-tx2-llm.git
 cd jetson-tx2-llm
-chmod +x install.sh
+chmod +x install.sh scripts/*.sh
 sudo ./install.sh
 ```
 
@@ -265,7 +265,10 @@ cmake .. \
 make -j4 llama-cli llama-server
 
 # 5. Install Ollama v0.1.48
-curl -fsSL https://ollama.com/install.sh | sudo sh
+# The official script sets up the ollama user/group/systemd unit.
+# It may print a GLIBC_2.28 error when testing the binary — that is expected.
+# The next two commands immediately replace the binary with the compatible build.
+curl -fsSL https://ollama.com/install.sh | sudo sh || true
 curl -fsSL https://github.com/ollama/ollama/releases/download/v0.1.48/ollama-linux-arm64 \
   -o /tmp/ollama-0.1.48
 sudo mv /tmp/ollama-0.1.48 /usr/local/bin/ollama
