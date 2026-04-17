@@ -48,7 +48,7 @@ For `qwen2.5:7b` (4.4 GB) with partial offload (20/29 layers on GPU):
 ## Quick Start
 
 ```bash
-git clone https://github.com/<your-username>/jetson-tx2-llm.git
+git clone https://github.com/tarlanahad/jetson-tx2-llm.git
 cd jetson-tx2-llm
 chmod +x install.sh
 sudo ./install.sh
